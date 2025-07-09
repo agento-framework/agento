@@ -1,6 +1,6 @@
 {
   "name": "agento",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A sophisticated agentic framework for building AI agents with state machines and intent-based routing",
   "type": "module",
   "main": "dist/index.js",
