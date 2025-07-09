@@ -1,0 +1,65 @@
+{
+  "name": "agento",
+  "version": "0.1.0",
+  "description": "A sophisticated agentic framework for building AI agents with state machines and intent-based routing",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc -p tsconfig.build.json || true",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "node test-framework.ts",
+    "demo:bank": "tsx examples/bank-cli-demo.ts",
+    "demo:bank:debug": "DEBUG=1 tsx examples/bank-cli-demo.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "keywords": [
+    "ai",
+    "agent",
+    "framework",
+    "llm",
+    "state-machine",
+    "intent-based",
+    "conversation",
+    "chatbot",
+    "assistant"
+  ],
+  "author": "Enoch Abassey",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.55.0",
+    "@types/node": "^20.0.0",
+    "dotenv": "^16.5.0",
+    "groq-sdk": "^0.25.0",
+    "openai": "^5.7.0",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agento/framework"
+  },
+  "homepage": "https://github.com/agento/framework#readme",
+  "bugs": {
+    "url": "https://github.com/agento/framework/issues"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "sideEffects": false
+}

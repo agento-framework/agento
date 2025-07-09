@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationDir": "dist",
+    "sourceMap": true,
+    "noEmit": false,
+    // Disable .ts extension imports during emit phase to satisfy TS5096
+    "allowImportingTsExtensions": false,
+    "noEmitOnError": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["tests", "examples", "docs", "**/*.test.ts"]
+} 
