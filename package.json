@@ -48,11 +48,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/agento/framework"
+    "url": "https://github.com/agento-framework/agento"
   },
-  "homepage": "https://github.com/agento/framework#readme",
+  "homepage": "https://github.com/agento-framework/agento#readme",
   "bugs": {
-    "url": "https://github.com/agento/framework/issues"
+    "url": "https://github.com/agento-framework/agento/issues"
   },
   "exports": {
     ".": {
