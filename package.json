@@ -9,7 +9,10 @@
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc -p tsconfig.build.json || true",
     "dev": "tsc -p tsconfig.json --watch",
-    "test": "node test-framework.ts",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:legacy": "node test-framework.ts",
     "demo:bank": "tsx examples/bank-cli-demo.ts",
     "demo:bank:debug": "DEBUG=1 tsx examples/bank-cli-demo.ts",
     "prepublishOnly": "npm run build"
@@ -40,6 +43,7 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@types/bun": "^1.2.18",
     "tsx": "^4.20.3",
     "typescript": "^5.0.0"
   },
