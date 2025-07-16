@@ -115,6 +115,7 @@ export interface AgentContext {
   conversationHistory: Array<{
     role: "user" | "assistant" | "tool";
     content: string;
+    intentReasoning?: string;
     toolCalls?: any[];
     toolCallId?: string;
     toolResults?: ToolResult[];
@@ -141,6 +142,8 @@ export interface StoredMessage {
   role: "user" | "assistant" | "tool" | "system";
   /** Message content */
   content: string;
+  /** Intent reasoning for user messages (optional) */
+  intentReasoning?: string;
   /** Tool calls made by assistant */
   toolCalls?: Array<{
     id: string;

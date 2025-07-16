@@ -108,6 +108,7 @@ export class Agent {
     conversationHistory: Array<{
       role: "user" | "assistant" | "tool";
       content: string;
+      intentReasoning?: string;
       toolCalls?: any[];
       toolCallId?: string;
       toolResults?: ToolResult[];
@@ -140,6 +141,7 @@ export class Agent {
         metadata.contextStrategy = optimizedContext.contextStrategy;
       }
     }
+    console.log('effectiveHistory: ', effectiveHistory);
 
     // CONTEXT ORCHESTRATION - The "Scanning Ball" in Action
     let contextOrchestrationResult;
@@ -182,7 +184,11 @@ export class Agent {
     const intentAnalysis = await this.intentAnalyzer.analyzeIntentWithContext(
       userId,
       userQuery,
-      effectiveHistory.map((h) => ({ role: h.role, content: h.content })),
+      effectiveHistory.map((h) => ({ 
+        role: h.role, 
+        content: h.content,
+        intentReasoning: h.intentReasoning 
+      })),
       metadata
     );
 
@@ -217,7 +223,10 @@ export class Agent {
         
         // Store guard failure response if persistence is enabled
         if (this.conversationManager && sessionId) {
-          await this.conversationManager.storeMessage(sessionId, "user", userQuery, { metadata });
+          await this.conversationManager.storeMessage(sessionId, "user", userQuery, { 
+            metadata,
+            intentReasoning: intentAnalysis.reasoning 
+          });
           await this.conversationManager.storeMessage(sessionId, "assistant", guardResponse.response, {
             stateKey: guardResponse.selectedState.key,
             metadata: { ...metadata, guardFailure: true }
@@ -228,18 +237,31 @@ export class Agent {
       }
     }
 
-    // Step 3: Store user message if persistence is enabled
+    // Step 3: Store user message with intent reasoning if persistence is enabled
     if (this.conversationManager && sessionId) {
-      await this.conversationManager.storeMessage(sessionId, "user", userQuery, { metadata });
+      await this.conversationManager.storeMessage(sessionId, "user", userQuery, { 
+        metadata,
+        intentReasoning: intentAnalysis.reasoning 
+      });
     }
 
     // Step 4: Build context for the LLM using enhanced state
+    // Include intent analysis reasoning in metadata for LLM context
+    const enhancedMetadata = {
+      ...metadata,
+      intentAnalysis: {
+        selectedState: intentAnalysis.selectedStateKey,
+        confidence: intentAnalysis.confidence,
+        reasoning: intentAnalysis.reasoning
+      }
+    };
+
     const agentContext: AgentContext = {
       userQuery,
       selectedState: enhancedState,
       toolResults: [],
       conversationHistory: effectiveHistory,
-      metadata,
+      metadata: enhancedMetadata,
     };
 
     // Step 5: Process with LLM and tools
@@ -538,11 +560,31 @@ export class Agent {
       systemMessage += `\n\n--- Context ---\n${contextContent}`;
     }
 
+    // Handle intent analysis reasoning specially for better formatting
+    if (metadata.intentAnalysis) {
+      const { selectedState, confidence, reasoning } = metadata.intentAnalysis;
+      systemMessage += `\n\n--- Intent Analysis ---\nSelected State: ${selectedState} (${confidence}% confidence)\nReasoning: ${reasoning}\n`;
+      
+      // Remove intentAnalysis from metadata to avoid duplication
+      const { intentAnalysis, ...otherMetadata } = metadata;
+      metadata = otherMetadata;
+    }
+
     if (Object.keys(metadata).length > 0) {
       const metadataStr = Object.entries(metadata)
-        .map(([key, value]) => `${key}: ${value}`)
+        .filter(([key, value]) => value !== undefined && value !== null)
+        .map(([key, value]) => {
+          // Handle complex objects better
+          if (typeof value === 'object') {
+            return `${key}: ${JSON.stringify(value, null, 2)}`;
+          }
+          return `${key}: ${value}`;
+        })
         .join("\n");
-      systemMessage += `\n\n--- Additional Information ---\n${metadataStr}`;
+      
+      if (metadataStr) {
+        systemMessage += `\n\n--- Additional Information ---\n${metadataStr}`;
+      }
     }
 
     return systemMessage;

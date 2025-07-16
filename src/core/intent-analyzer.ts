@@ -156,13 +156,13 @@ Respond with a JSON object in this exact format:
   async analyzeIntentWithContext(
     userId: string,
     userQuery: string,
-    conversationHistory: Array<{ role: string; content: string }> = [],
+    conversationHistory: Array<{ role: string; content: string; intentReasoning?: string }> = [],
     metadata: Record<string, any> = {}
   ): Promise<IntentAnalysis> {
     const leafStates = this.stateMachine.getLeafStateTree();
     
     // Debug logging
-    console.log('Available leaf states for intent analysis:', leafStates.map(s => ({ key: s.key, description: s.description, path: s.path })));
+    // console.log('Available leaf states for intent analysis:', leafStates.map(s => ({ key: s.key, description: s.description, path: s.path })));
     
     // Build context about available states
     const stateDescriptions = leafStates
@@ -172,11 +172,17 @@ Respond with a JSON object in this exact format:
       })
       .join("\n");
 
-    // Build conversation context
+    // Build conversation context with intent reasoning if available
     const conversationContext = conversationHistory.length > 0
       ? `\n\nConversation History:\n${conversationHistory
           .slice(-5) // Last 5 messages
-          .map((msg) => `${msg.role}: ${msg.content}`)
+          .map((msg) => {
+            let msgStr = `${msg.role}: ${msg.content}`;
+            if (msg.intentReasoning && msg.role === 'user') {
+              msgStr += `\n  [Intent Reasoning: ${msg.intentReasoning}]`;
+            }
+            return msgStr;
+          })
           .join("\n")}`
       : "";
 
@@ -197,10 +203,11 @@ CRITICAL INSTRUCTIONS:
 2. These are the ONLY valid options: ${leafStates.map(s => s.key).join(', ')}
 3. DO NOT select parent/intermediate states - only the specific leaf states shown
 4. Analyze the user's query to understand their intent
-5. Consider the conversation history and additional context
-6. Select the MOST APPROPRIATE leaf state that can best handle this intent
-7. Provide a confidence score (0-100) for your selection
-8. Explain your reasoning
+5. Consider the conversation history, including previous intent reasoning patterns
+6. Learn from previous intent selections to improve current decision
+7. Select the MOST APPROPRIATE leaf state that can best handle this intent
+8. Provide a confidence score (0-100) for your selection
+9. Explain your reasoning, referencing previous intent patterns if relevant
 
 RESPONSE FORMAT:
 You MUST respond with ONLY a JSON object, no additional text before or after.
@@ -208,7 +215,8 @@ You MUST respond with ONLY a JSON object, no additional text before or after.
 IMPORTANT RULES:
 - You MUST select one of these exact leaf state keys: ${leafStates.map(s => s.key).join(', ')}
 - Consider the full path context when making decisions
-- Use conversation history to understand context and continuation
+- Use conversation history and previous intent reasoning to understand context and continuation
+- Look for patterns in previous intent decisions to guide current selection
 - Higher specificity is better than generality
 - If multiple states could work, choose the most specific one
 - Confidence should reflect how certain you are about the match
@@ -217,7 +225,7 @@ Respond with a JSON object in this exact format:
 {
   "selectedStateKey": "exact_key_from_list",
   "confidence": 85,
-  "reasoning": "Brief explanation of why this state was chosen"
+  "reasoning": "Brief explanation of why this state was chosen, referencing conversation patterns if applicable"
 }`;
 
     const messages: LLMMessage[] = [
@@ -228,7 +236,7 @@ Respond with a JSON object in this exact format:
     try {
       const response = await this.llmProvider.generateResponse(messages);
       
-      console.log('LLM response for intent analysis:', response.content);
+      // console.log('LLM response for intent analysis:', response.content);
       
       // Parse the JSON response
       const result = this.parseIntentResponse(response.content);

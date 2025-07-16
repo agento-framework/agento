@@ -39,6 +39,7 @@ export class ConversationManager {
     content: string,
     options: {
       stateKey?: string;
+      intentReasoning?: string;
       toolCalls?: any[];
       toolCallId?: string;
       toolResults?: ToolResult[];
@@ -50,6 +51,7 @@ export class ConversationManager {
       sessionId,
       role,
       content,
+      intentReasoning: options.intentReasoning,
       stateKey: options.stateKey,
       toolCalls: options.toolCalls,
       toolCallId: options.toolCallId,
@@ -80,6 +82,7 @@ export class ConversationManager {
     messages: Array<{
       role: "user" | "assistant" | "tool";
       content: string;
+      intentReasoning?: string;
       toolCalls?: any[];
       toolCallId?: string;
       toolResults?: ToolResult[];
@@ -111,6 +114,7 @@ export class ConversationManager {
       .map((msg) => ({
         role: msg.role as "user" | "assistant" | "tool",
         content: msg.content,
+        intentReasoning: msg.intentReasoning,
         toolCalls: msg.toolCalls,
         toolCallId: msg.toolCallId,
         toolResults: msg.toolResults,
