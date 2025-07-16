@@ -16,6 +16,7 @@ import { ToolExecutor, type ToolFunction } from "./tool-executor";
 import { ConversationManager } from "./conversation-manager";
 import { createTemporalContext } from "./temporal-context";
 import { temporalTools, temporalToolImplementations } from "./temporal-tools";
+import { documentTools, documentToolImplementations } from "./document-tools";
 import { createContextualAwarenessContext } from "./contextual-awareness";
 import { createMemoryContext } from "./memory-system.js";
 import { externalIntegrationTools, externalIntegrationToolImplementations } from "./external-integration.js";
@@ -49,7 +50,7 @@ export class Agent {
     const enhancedContexts = [...config.contexts, temporalContext, contextualAwarenessContext, memoryContext];
     
     // Add comprehensive tools to all agents by default
-    const enhancedTools = [...config.tools, ...temporalTools, ...externalIntegrationTools];
+    const enhancedTools = [...config.tools, ...temporalTools, ...documentTools, ...externalIntegrationTools];
     
     this.stateMachine = new StateMachine(
       config.states,
@@ -66,6 +67,7 @@ export class Agent {
 
     // Register all tool implementations by default
     this.toolExecutor.registerTools(temporalToolImplementations);
+    this.toolExecutor.registerTools(documentToolImplementations);
     this.toolExecutor.registerTools(externalIntegrationToolImplementations);
 
     // Initialize conversation manager if storage is provided

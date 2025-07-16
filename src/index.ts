@@ -70,6 +70,11 @@ export type {
   ConversationConfig,
 } from "./types.js";
 
+// Built-in tools exports
+export { temporalTools, temporalToolImplementations } from './core/temporal-tools.js';
+export { documentTools, documentToolImplementations } from './core/document-tools.js';
+export { externalIntegrationTools, externalIntegrationToolImplementations } from './core/external-integration.js';
+
 // Schema exports for validation
 export {
   ToolParameterSchema,
