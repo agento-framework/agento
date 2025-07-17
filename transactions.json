@@ -1,0 +1,16 @@
+{
+  "transactions": [
+    {
+      "amount": 1500,
+      "balance": 2540.75,
+      "date": "2024-01-01",
+      "type": "deposit"
+    },
+    {
+      "amount": 120,
+      "balance": 2420.75,
+      "date": "2024-01-02",
+      "type": "withdrawal"
+    }
+  ]
+}

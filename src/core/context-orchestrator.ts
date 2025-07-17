@@ -293,7 +293,7 @@ Respond with JSON:
     ]);
 
     try {
-      return JSON.parse(response.content);
+      return JSON.parse(this.cleanJsonResponse(response.content));
     } catch (error) {
       console.error("Failed to parse reasoning analysis:", error);
       return {
@@ -388,7 +388,7 @@ Respond with JSON array:
     ]);
 
     try {
-      return JSON.parse(response.content);
+      return JSON.parse(this.cleanJsonResponse(response.content));
     } catch (error) {
       console.error("Failed to parse tool relevance analysis:", error);
       return [];
@@ -641,7 +641,7 @@ Respond with JSON:
     ]);
 
     try {
-      return JSON.parse(llmResponse.content);
+      return JSON.parse(this.cleanJsonResponse(llmResponse.content));
     } catch (error) {
       return {
         concepts: [],
@@ -694,5 +694,26 @@ Respond with JSON:
       totalReasoningSteps: this.reasoningHistory.length,
       topConcepts
     };
+  }
+
+  /**
+   * Clean JSON response from LLM that might contain markdown formatting
+   */
+  private cleanJsonResponse(content: string): string {
+    // Remove markdown code blocks
+    let cleaned = content.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+    
+    // Remove any leading/trailing whitespace
+    cleaned = cleaned.trim();
+    
+    // Find the first { and last } to extract just the JSON object
+    const firstBrace = cleaned.indexOf('{');
+    const lastBrace = cleaned.lastIndexOf('}');
+    
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+    }
+    
+    return cleaned;
   }
 } 

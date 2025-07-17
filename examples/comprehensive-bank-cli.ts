@@ -1358,7 +1358,7 @@ class BankingCLI {
         model: 'llama-3.3-70b-versatile',
         // model: 'llama-3.1-8b-instant',
         apiKey: process.env.GROQ_API_KEY!,
-        temperature: 0.4,
+        temperature: 0.6,
       },
       maxToolIterations: 8, // Increased from default 5 to handle banking workflows
       conversationConfig: {
@@ -1368,6 +1368,13 @@ class BankingCLI {
         maxContextTokens: 2000,
         defaultRelevanceStrategy: 'hybrid',
         enableEmbeddings: false,
+      },
+      enhancedResponseConfig: {
+        enableConversationFlow: true,
+        enablePersonalization: true,
+        enableIterationPrevention: true,
+        naturalLanguagePatterns: true,
+        emotionalIntelligence: true,
       }
     });
 

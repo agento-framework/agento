@@ -21,6 +21,7 @@ import { createContextualAwarenessContext } from "./contextual-awareness";
 import { createMemoryContext } from "./memory-system.js";
 import { externalIntegrationTools, externalIntegrationToolImplementations } from "./external-integration.js";
 import { ContextOrchestrator, type ContextOrchestratorConfig, type KnowledgeBaseConnector } from "./context-orchestrator";
+import { EnhancedResponseGenerator } from "./enhanced-response-generator";
 
 export interface AgentConfig {
   states: StateConfig[];
@@ -32,6 +33,13 @@ export interface AgentConfig {
   conversationConfig?: ConversationConfig;
   contextOrchestratorConfig?: ContextOrchestratorConfig;
   knowledgeBaseConnector?: KnowledgeBaseConnector;
+  enhancedResponseConfig?: {
+    enableConversationFlow?: boolean;
+    enablePersonalization?: boolean;
+    enableIterationPrevention?: boolean;
+    naturalLanguagePatterns?: boolean;
+    emotionalIntelligence?: boolean;
+  };
 }
 
 export class Agent {
@@ -41,6 +49,7 @@ export class Agent {
   private maxToolIterations: number;
   private conversationManager?: ConversationManager;
   private contextOrchestrator?: ContextOrchestrator;
+  private enhancedResponseGenerator?: EnhancedResponseGenerator;
 
   constructor(config: AgentConfig) {
     // Add comprehensive context awareness to all agents by default
@@ -80,6 +89,18 @@ export class Agent {
       this.contextOrchestrator = new ContextOrchestrator({
         ...config.contextOrchestratorConfig,
         knowledgeBaseConnector: config.knowledgeBaseConnector
+      });
+    }
+
+    // Initialize enhanced response generator if configured
+    if (config.enhancedResponseConfig) {
+      this.enhancedResponseGenerator = new EnhancedResponseGenerator({
+        llmConfig: config.defaultLLMConfig,
+        enableConversationFlow: config.enhancedResponseConfig.enableConversationFlow ?? true,
+        enablePersonalization: config.enhancedResponseConfig.enablePersonalization ?? true,
+        enableIterationPrevention: config.enhancedResponseConfig.enableIterationPrevention ?? true,
+        naturalLanguagePatterns: config.enhancedResponseConfig.naturalLanguagePatterns ?? true,
+        emotionalIntelligence: config.enhancedResponseConfig.emotionalIntelligence ?? true,
       });
     }
   }
@@ -249,6 +270,8 @@ export class Agent {
     // Include intent analysis reasoning in metadata for LLM context
     const enhancedMetadata = {
       ...metadata,
+      userId,
+      sessionId: effectiveSessionId,
       intentAnalysis: {
         selectedState: intentAnalysis.selectedStateKey,
         confidence: intentAnalysis.confidence,
@@ -478,8 +501,29 @@ export class Agent {
 
       // If no tool calls, we're done
       if (!response.toolCalls || response.toolCalls.length === 0) {
+        let finalResponse = response.content;
+        
+        // Use enhanced response generator if available
+        if (this.enhancedResponseGenerator) {
+          try {
+            const enhancedResult = await this.enhancedResponseGenerator.generateEnhancedResponse({
+              userQuery: context.userQuery,
+              conversationHistory: context.conversationHistory,
+              toolResults: allToolResults,
+              contexts: context.selectedState.contexts,
+              metadata: context.metadata,
+              userId: context.metadata.userId || 'anonymous',
+              sessionId: context.metadata.sessionId || 'default'
+            });
+            finalResponse = enhancedResult.response;
+          } catch (error) {
+            // If enhancement fails, fall back to original response
+            console.warn('Enhanced response generation failed, using original response:', error);
+          }
+        }
+        
         return {
-          response: response.content,
+          response: finalResponse,
           toolResults: allToolResults,
         };
       }
